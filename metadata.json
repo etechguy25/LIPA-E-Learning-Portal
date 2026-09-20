@@ -1,0 +1,6 @@
+{
+  "name": "LIPA eLearning Center",
+  "description": "LIPA eLearning Center (Transforming Minds & Institutions - Est. 1969) – Academic Learning Management System featuring dedicated portals for students, instructors, and administrators, course management, tuition billing, lesson scheduling, and institutional analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,159 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile for students, instructors, and administrators",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["student", "instructor", "admin"] },
+        "department": { "type": "string", "maxLength": 120 },
+        "studentId": { "type": "string", "maxLength": 50 },
+        "instructorId": { "type": "string", "maxLength": 50 },
+        "academicYear": { "type": "string", "maxLength": 50 },
+        "major": { "type": "string", "maxLength": 120 },
+        "balanceOwed": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "totalDue": { "type": "number" },
+        "assignedCourseIds": { "type": "array" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic course offering within the institution",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "code": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 200 },
+        "department": { "type": "string", "maxLength": 120 },
+        "credits": { "type": "number" },
+        "tuitionFee": { "type": "number" },
+        "instructorId": { "type": "string", "maxLength": 128 },
+        "instructorName": { "type": "string", "maxLength": 150 },
+        "capacity": { "type": "number" },
+        "enrolledCount": { "type": "number" },
+        "schedule": { "type": "string", "maxLength": 100 },
+        "room": { "type": "string", "maxLength": 80 }
+      },
+      "required": ["id", "code", "title", "credits"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Course assignments and student deliverables",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "courseCode": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 200 },
+        "dueDate": { "type": "string", "maxLength": 50 },
+        "totalPoints": { "type": "number" },
+        "description": { "type": "string", "maxLength": 2000 }
+      },
+      "required": ["id", "courseId", "title", "totalPoints"]
+    },
+    "StudentSubmission": {
+      "title": "StudentSubmission",
+      "description": "Student deliverable submission records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "assignmentId": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "status": { "type": "string", "enum": ["pending", "graded"] },
+        "score": { "type": "number" },
+        "maxScore": { "type": "number" },
+        "fileAttachment": { "type": "string", "maxLength": 300 },
+        "feedback": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "assignmentId", "studentId", "status"]
+    },
+    "PaymentTransaction": {
+      "title": "PaymentTransaction",
+      "description": "Financial tuition and fee payments records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 50 },
+        "method": { "type": "string", "maxLength": 50 },
+        "receiptNumber": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["completed", "pending", "failed"] }
+      },
+      "required": ["id", "studentId", "amount", "status"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "System and administrative activity audit log events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "action": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["auth", "course", "system", "finance", "student", "academic"] },
+        "actorId": { "type": "string", "maxLength": 128 },
+        "actorName": { "type": "string", "maxLength": 150 },
+        "actorRole": { "type": "string", "enum": ["student", "instructor", "admin", "system"] },
+        "target": { "type": "string", "maxLength": 200 },
+        "details": { "type": "string", "maxLength": 2000 },
+        "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+        "ipAddress": { "type": "string", "maxLength": 64 },
+        "timestamp": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "action", "category", "actorName", "actorRole", "timestamp"]
+    },
+    "SystemSetting": {
+      "title": "SystemSetting",
+      "description": "Institutional parameters and financial settings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "institutionName": { "type": "string", "maxLength": 200 },
+        "tuitionFeePerCredit": { "type": "number" },
+        "academicYear": { "type": "string", "maxLength": 50 },
+        "currentSemester": { "type": "string", "maxLength": 50 },
+        "currency": { "type": "string", "maxLength": 10 },
+        "enableLateRegistration": { "type": "boolean" },
+        "maintenanceMode": { "type": "boolean" },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "institutionName"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles for student, faculty, and administrative users"
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Institution academic course catalog"
+    },
+    "/assignments/{assignmentId}": {
+      "schema": "Assignment",
+      "description": "Assignments and milestones for academic courses"
+    },
+    "/submissions/{submissionId}": {
+      "schema": "StudentSubmission",
+      "description": "Homework and project submissions uploaded by students"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "PaymentTransaction",
+      "description": "Bursar payment receipts and tuition transactions"
+    },
+    "/activity_logs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Audit trail of user logins, course modifications, financial actions, and system updates"
+    },
+    "/system_settings/{settingId}": {
+      "schema": "SystemSetting",
+      "description": "Global institutional configuration and administrative parameters"
+    }
+  }
+}

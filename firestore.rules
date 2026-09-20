@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isCurrentUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'etechguy25@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isCurrentUser(userId) || isAdmin());
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(userId) && (isCurrentUser(userId) || isAdmin()) &&
+        incoming().name is string && incoming().name.size() <= 150 &&
+        incoming().email is string && incoming().email.size() <= 150 &&
+        incoming().role in ['student', 'instructor', 'admin'];
+      allow update: if isSignedIn() && (isCurrentUser(userId) || isAdmin()) &&
+        (isAdmin() || incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'phone', 'whatsApp', 'avatar', 'coverPhoto', 'academicYear', 'major']));
+      allow delete: if isAdmin();
+    }
+
+    // Course Catalog Rules
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Assignment Rules
+    match /assignments/{assignmentId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // Student Submissions Rules
+    match /submissions/{submissionId} {
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && isValidId(submissionId) && (
+        incoming().studentId == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        (resource.data.studentId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['fileAttachment', 'feedback', 'submittedAt', 'submittedDate'])) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Payment Transactions Rules
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (isAdmin() || incoming().studentId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Activity Log & Audit Trail Rules (Immutable Audit Trail)
+    match /activity_logs/{logId} {
+      allow read: if isSignedIn() && (isAdmin() || resource.data.actorId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(logId) && (
+        incoming().category in ['auth', 'course', 'system', 'finance', 'student', 'academic']
+      );
+      allow update: if false; // Audit logs cannot be modified
+      allow delete: if isAdmin();
+    }
+
+    // System Settings Rules
+    match /system_settings/{settingId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
